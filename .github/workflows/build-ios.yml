@@ -1,0 +1,85 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'elghaliz-medicine-desktop/src/**'
+      - 'elghaliz-medicine-desktop/public/**'
+      - 'elghaliz-medicine-desktop/index.html'
+      - 'elghaliz-medicine-desktop/package.json'
+      - 'elghaliz-medicine-desktop/pnpm-lock.yaml'
+      - 'elghaliz-medicine-desktop/capacitor.config.json'
+      - 'elghaliz-medicine-desktop/pnpm-workspace.yaml'
+      - 'elghaliz-medicine-desktop/ios/**'
+      - 'elghaliz-medicine-desktop/.github/workflows/build-ios.yml'
+      - 'elghaliz-medicine-desktop/IOS_BUILD.md'
+      - '.github/workflows/build-ios.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.28.5
+          run_install: false
+
+      - name: Install dependencies
+        working-directory: elghaliz-medicine-desktop
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        working-directory: elghaliz-medicine-desktop
+        run: pnpm build
+
+      - name: Sync web assets into iOS project
+        working-directory: elghaliz-medicine-desktop
+        run: pnpm cap sync ios
+
+      - name: Install iOS CocoaPods dependencies
+        working-directory: elghaliz-medicine-desktop
+        run: pod install --project-directory=ios/App
+
+      - name: Compile unsigned iOS app
+        working-directory: elghaliz-medicine-desktop
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package unsigned IPA
+        working-directory: elghaliz-medicine-desktop
+        run: |
+          APP_PATH='build/ios-derived/Build/Products/Release-iphoneos/App.app'
+          test -d "$APP_PATH"
+          mkdir -p build/ipa/Payload
+          cp -R "$APP_PATH" build/ipa/Payload/App.app
+          (cd build/ipa && /usr/bin/zip -qr "$GITHUB_WORKSPACE/Elghaliz-Medicine-unsigned.ipa" Payload)
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Elghaliz-Medicine-unsigned-IPA
+          path: Elghaliz-Medicine-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14

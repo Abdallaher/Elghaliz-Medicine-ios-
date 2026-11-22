@@ -1,0 +1,23 @@
+node_modules/
+dist/
+release/
+electron-dist/
+*.log
+*.exe
+*.zip
+*.ipa
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Generated on macOS CI by Capacitor
+ios/App/Pods/
+ios/App/build/
+ios/App/output/
+ios/DerivedData/
+ios/xcuserdata/
+ios/capacitor-cordova-ios-plugins/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml

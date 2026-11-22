@@ -1,0 +1,6 @@
+{
+  "name": "Elghaliz Medicine",
+  "description": "منصة تعليمية طبية متكاملة للمحاضرات المرئية والاجتماعات المباشرة والتنزيل الداخلي بإشراف الأطباء والمسؤولين",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.github
+.aistudio
+app
+gradle
+elghaliz-medicine-desktop
+*.gradle.kts
+gradle.properties
+debug.keystore.base64
+firestore.test.js
+*.log

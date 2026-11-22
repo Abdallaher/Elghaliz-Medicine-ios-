@@ -1,0 +1,230 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128;
+    }
+
+    // Bootstrapped Admin + Verified Admin Membership Lookup
+    function isBootstrappedAdminEmail() {
+      return isSignedIn() &&
+             'email' in request.auth.token &&
+             (
+               request.auth.token.email == 'abdallahxh909@gmail.com' ||
+               request.auth.token.email == 'ABDALLAHXH909@GMAIL.COM'
+             );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isBootstrappedAdminEmail() ||
+        exists(/databases/$(database)/documents/admin_members/$(request.auth.uid)) ||
+        (
+          exists(/databases/$(database)/documents/system_state/config) &&
+          get(/databases/$(database)/documents/system_state/config).data.primaryAdminUid == request.auth.uid
+        )
+      );
+    }
+
+    function isApprovedStudent() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/student_requests/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/student_requests/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    function isApprovedStudentOrAdmin() {
+      return isAdmin() || isApprovedStudent();
+    }
+
+    function isEnrolledInCategory(categoryId) {
+      return isAdmin() || (
+        isApprovedStudent() &&
+        exists(/databases/$(database)/documents/course_requests/$(request.auth.uid + '_' + categoryId)) &&
+        get(/databases/$(database)/documents/course_requests/$(request.auth.uid + '_' + categoryId)).data.status == 'approved'
+      );
+    }
+
+    // 1. System State (Bootstrap & Central 5TB Google Drive Config)
+    match /system_state/{configId} {
+      allow read: if isSignedIn() && (
+        (configId == 'drive_config' && isAdmin()) ||
+        (configId == 'app_update') ||
+        (configId != 'drive_config')
+      );
+
+      allow create, update: if isSignedIn() && (
+        ((configId == 'drive_config' || configId == 'app_update') && isAdmin()) ||
+        (
+          configId != 'drive_config' &&
+          configId != 'app_update' &&
+          (isAdmin() || !exists(/databases/$(database)/documents/system_state/config))
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 2. Admin Members
+    match /admin_members/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          request.auth.uid == userId &&
+          (
+            isBootstrappedAdminEmail() ||
+            (
+              'emailHash' in incoming() &&
+              exists(/databases/$(database)/documents/system_state/config) &&
+              incoming().emailHash in get(/databases/$(database)/documents/system_state/config).data.adminEmailHashes
+            )
+          )
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 3. Admins Directory
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    function isValidOneDeviceLockOnUpdate() {
+      return (
+        (!('registeredDeviceIds' in existing()) || existing().registeredDeviceIds.size() == 0) &&
+        (!('registeredDeviceIds' in incoming()) || (incoming().registeredDeviceIds is list && incoming().registeredDeviceIds.size() <= 1))
+      ) || (
+        ('registeredDeviceIds' in existing()) &&
+        existing().registeredDeviceIds.size() >= 1 &&
+        ('registeredDeviceIds' in incoming()) &&
+        incoming().registeredDeviceIds == existing().registeredDeviceIds
+      );
+    }
+
+    // 4. Student Join Requests, Approval Status & Strict Permanent 1-Device Lock
+    match /student_requests/{studentId} {
+      allow get: if isSignedIn() && (request.auth.uid == studentId || isAdmin());
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == studentId &&
+                       incoming().userId == request.auth.uid &&
+                       (incoming().status == 'pending' || isAdmin()) &&
+                       (
+                         !('registeredDeviceIds' in incoming()) ||
+                         (incoming().registeredDeviceIds is list && incoming().registeredDeviceIds.size() <= 1)
+                       );
+
+      allow update: if isSignedIn() &&
+                       isValidOneDeviceLockOnUpdate() &&
+                       (
+                         isAdmin() ||
+                         (
+                           request.auth.uid == studentId &&
+                           incoming().status == existing().status
+                         )
+                       );
+
+      allow delete: if isAdmin();
+    }
+
+    // 4b. Per-Category (Course) Enrollment Requests & Approvals (/course_requests/{requestId})
+    match /course_requests/{requestId} {
+      allow get: if isSignedIn() &&
+                    (isAdmin() || resource == null || existing().userId == request.auth.uid);
+
+      allow list: if isSignedIn() && (
+        existing().userId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow create: if isSignedIn() && (
+        (
+          request.auth.uid == incoming().userId &&
+          incoming().status == 'pending' &&
+          isApprovedStudent()
+        ) ||
+        isAdmin()
+      );
+
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // 5. Academic Medical Categories
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 6. Video Lectures & Chunks
+    match /lectures/{lectureId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      match /video_chunks/{chunkId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // 7. Native Built-in Live Meetings
+    match /meetings/{meetingId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      // 8. Native In-Room Live Chat & Questions Subcollection
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn() && isApprovedStudentOrAdmin();
+        allow create, update: if isSignedIn() && isApprovedStudentOrAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // 9. Student Per-User In-App Offline Downloads
+    match /users/{userId}/downloads/{lectureId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 10. Course Timed PDF Exams & PDF Chunks
+    match /exams/{examId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      match /pdf_chunks/{chunkId} {
+        allow read: if isSignedIn() &&
+                       exists(/databases/$(database)/documents/exams/$(examId)) &&
+                       isEnrolledInCategory(get(/databases/$(database)/documents/exams/$(examId)).data.categoryId);
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // 11. Smart Course Notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

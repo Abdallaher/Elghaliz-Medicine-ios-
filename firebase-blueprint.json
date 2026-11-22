@@ -1,0 +1,868 @@
+{
+  "entities": {
+    "SystemState": {
+      "title": "SystemState",
+      "description": "Global bootstrap configuration storing primary admin UID and SHA-256 hashes of authorized admin emails without exposing raw PII.",
+      "type": "object",
+      "properties": {
+        "primaryAdminUid": {
+          "type": "string",
+          "description": "UID of the primary administrator who bootstrapped the app."
+        },
+        "adminEmailHashes": {
+          "type": "array",
+          "description": "Bounded list (max 50) of lowercase SHA-256 hex hashes of authorized admin emails."
+        },
+        "scopeKey": {
+          "type": "string",
+          "enum": ["global"],
+          "description": "Fixed scope key for configuration."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["primaryAdminUid", "adminEmailHashes", "scopeKey", "createdAt", "updatedAt"]
+    },
+    "CentralDriveConfig": {
+      "title": "CentralDriveConfig",
+      "description": "Central 5TB Google Drive vault authorization and folder configuration activated by the primary admin (abdallahxh909@gmail.com) at /system_state/drive_config for all admins and students.",
+      "type": "object",
+      "properties": {
+        "primaryAdminEmail": {
+          "type": "string",
+          "description": "Email of the primary admin (abdallahxh909@gmail.com) owning the 5TB Google Drive."
+        },
+        "primaryAdminUid": {
+          "type": "string",
+          "description": "UID of the primary admin who activated the central 5TB Drive vault."
+        },
+        "vaultFolderId": {
+          "type": "string",
+          "description": "Google Drive folder ID for Elghaliz_Medicine_5TB_Vault."
+        },
+        "vaultFolderName": {
+          "type": "string",
+          "description": "Folder name on Google Drive (Elghaliz_Medicine_5TB_Vault)."
+        },
+        "accessToken": {
+          "type": "string",
+          "description": "Active Google Drive OAuth2 access token with drive.file scope."
+        },
+        "refreshToken": {
+          "type": "string",
+          "description": "OAuth2 refresh token or server auth token for automatic renewal."
+        },
+        "tokenExpiresAtMillis": {
+          "type": "integer",
+          "description": "Epoch milliseconds when the current accessToken expires."
+        },
+        "isEnabled": {
+          "type": "boolean",
+          "description": "Whether the central 5TB Google Drive vault is active."
+        },
+        "scopeKey": {
+          "type": "string",
+          "enum": ["global"],
+          "description": "Fixed scope key for configuration."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "primaryAdminEmail",
+        "primaryAdminUid",
+        "vaultFolderId",
+        "vaultFolderName",
+        "accessToken",
+        "refreshToken",
+        "tokenExpiresAtMillis",
+        "isEnabled",
+        "scopeKey",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminMember": {
+      "title": "AdminMember",
+      "description": "Verified admin membership document keyed by authenticated user UID.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the admin user."
+        },
+        "emailHash": {
+          "type": "string",
+          "description": "SHA-256 hex hash of the admin's lowercase email."
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "description": "Whether this admin is the primary administrator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "emailHash", "isPrimary", "createdAt", "updatedAt"]
+    },
+    "AdminEntry": {
+      "title": "AdminEntry",
+      "description": "Admin directory entry managed exclusively by admins, isolated from student access.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Lowercase email address of the authorized admin/doctor."
+        },
+        "emailHash": {
+          "type": "string",
+          "description": "SHA-256 hex hash of the lowercase email address."
+        },
+        "roleTitle": {
+          "type": "string",
+          "description": "Title or role description of the doctor/admin."
+        },
+        "addedByUid": {
+          "type": "string",
+          "description": "UID of the admin who added this entry."
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "description": "Whether this entry belongs to the primary bootstrap admin."
+        },
+        "scopeKey": {
+          "type": "string",
+          "enum": ["global"],
+          "description": "Scope key for admin list queries."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["email", "emailHash", "roleTitle", "addedByUid", "isPrimary", "scopeKey", "createdAt", "updatedAt"]
+    },
+    "StudentRequest": {
+      "title": "StudentRequest",
+      "description": "Student registration and approval state managed by admins (pending, approved, suspended).",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the student user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the student."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the student."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "suspended"],
+          "description": "Approval status controlled exclusively by admins."
+        },
+        "scopeKey": {
+          "type": "string",
+          "enum": ["global"],
+          "description": "Scope key for admin list queries."
+        },
+        "registeredDeviceIds": {
+          "type": "array",
+          "description": "Server-enforced list of registered device IDs (max 2 devices per student account)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "email", "displayName", "status", "scopeKey", "createdAt", "updatedAt"]
+    },
+    "CourseRequest": {
+      "title": "CourseRequest",
+      "description": "Per-category (course) enrollment request and approval status for a specific student and category.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the student requesting or enrolled in the course."
+        },
+        "studentEmail": {
+          "type": "string",
+          "description": "Email address of the student."
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Display name of the student."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "ID of the academic category (course)."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Name of the academic category (course)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "suspended"],
+          "description": "Course subscription status controlled by admins."
+        },
+        "scopeKey": {
+          "type": "string",
+          "enum": ["global"],
+          "description": "Scope key for admin list queries."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "studentEmail",
+        "studentName",
+        "categoryId",
+        "categoryName",
+        "status",
+        "scopeKey",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Medical subject or academic category created by an authorized admin/doctor.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Category or medical subject name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the medical subject."
+        },
+        "createdByUid": {
+          "type": "string",
+          "description": "UID of the admin/doctor who created this category."
+        },
+        "createdByName": {
+          "type": "string",
+          "description": "Display name of the doctor who created this category."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["published"],
+          "description": "Visibility status for query enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["name", "description", "createdByUid", "createdByName", "visibility", "createdAt", "updatedAt"]
+    },
+    "Lecture": {
+      "title": "Lecture",
+      "description": "Video lecture uploaded by a doctor from the phone or saved from a recorded live meeting.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the lecture."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description and medical notes for the lecture."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "ID of the parent academic category."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Denormalized name of the academic category."
+        },
+        "uploadedByUid": {
+          "type": "string",
+          "description": "UID of the doctor who uploaded the lecture."
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Name of the lecturing doctor."
+        },
+        "videoSourceUri": {
+          "type": "string",
+          "description": "URI or internal file path of the uploaded video."
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "description": "Duration of the video lecture in seconds."
+        },
+        "fileSizeMb": {
+          "type": "integer",
+          "description": "Size of the video in megabytes."
+        },
+        "chunkCount": {
+          "type": "integer",
+          "description": "Number of binary video chunks stored in the video_chunks subcollection."
+        },
+        "isRecordedMeeting": {
+          "type": "boolean",
+          "description": "Whether this lecture was saved from a live meeting recording."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["published"],
+          "description": "Visibility status for query enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "categoryId",
+        "categoryName",
+        "uploadedByUid",
+        "doctorName",
+        "videoSourceUri",
+        "durationSeconds",
+        "fileSizeMb",
+        "chunkCount",
+        "isRecordedMeeting",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LectureVideoChunk": {
+      "title": "LectureVideoChunk",
+      "description": "Base64-encoded binary MP4 video chunk uploaded from the doctor's phone for student streaming and offline download.",
+      "type": "object",
+      "properties": {
+        "lectureId": {
+          "type": "string",
+          "description": "ID of the parent lecture."
+        },
+        "chunkIndex": {
+          "type": "integer",
+          "description": "Zero-based index of the binary video chunk."
+        },
+        "dataBase64": {
+          "type": "string",
+          "description": "Base64-encoded MP4 binary bytes for this chunk."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["lectureId", "chunkIndex", "dataBase64", "createdAt", "updatedAt"]
+    },
+    "Meeting": {
+      "title": "Meeting",
+      "description": "Built-in native interactive medical lecture session hosted by an admin/doctor inside the app.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Topic of the live medical meeting."
+        },
+        "hostUid": {
+          "type": "string",
+          "description": "UID of the hosting doctor."
+        },
+        "hostName": {
+          "type": "string",
+          "description": "Name of the hosting doctor."
+        },
+        "presentationMode": {
+          "type": "string",
+          "enum": ["camera", "slides"],
+          "description": "Active display mode in the native live room (doctor camera vs medical slides/screen)."
+        },
+        "currentSlideIndex": {
+          "type": "integer",
+          "description": "Current slide index when sharing medical slides."
+        },
+        "studentsMuted": {
+          "type": "boolean",
+          "description": "Whether the doctor has muted all student microphones."
+        },
+        "raisedHandsCount": {
+          "type": "integer",
+          "description": "Number of students currently raising their hand."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["live", "ended"],
+          "description": "Current status of the live meeting."
+        },
+        "isRecording": {
+          "type": "boolean",
+          "description": "Whether the built-in recorder is actively recording the live session."
+        },
+        "isScreenSharing": {
+          "type": "boolean",
+          "description": "Whether the doctor is currently sharing their screen/slides."
+        },
+        "participantCount": {
+          "type": "integer",
+          "description": "Number of connected students and doctors."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["published"],
+          "description": "Visibility status for query enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "title",
+        "hostUid",
+        "hostName",
+        "presentationMode",
+        "currentSlideIndex",
+        "studentsMuted",
+        "raisedHandsCount",
+        "status",
+        "isRecording",
+        "isScreenSharing",
+        "participantCount",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MeetingMessage": {
+      "title": "MeetingMessage",
+      "description": "In-room live chat message or question sent during a native live meeting.",
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "ID of the parent live meeting."
+        },
+        "senderUid": {
+          "type": "string",
+          "description": "UID of the sender."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Display name of the sender."
+        },
+        "senderRole": {
+          "type": "string",
+          "enum": ["admin", "student"],
+          "description": "Role of the sender."
+        },
+        "text": {
+          "type": "string",
+          "description": "Message or medical question content."
+        },
+        "isHandRaise": {
+          "type": "boolean",
+          "description": "Whether this message represents a student raising their hand."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "meetingId",
+        "senderUid",
+        "senderName",
+        "senderRole",
+        "text",
+        "isHandRaise",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OfflineDownload": {
+      "title": "OfflineDownload",
+      "description": "Per-user record of a lecture saved strictly inside internal app storage for offline viewing.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the student who downloaded the lecture."
+        },
+        "lectureId": {
+          "type": "string",
+          "description": "ID of the downloaded lecture."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the lecture."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the lecture."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Category name of the lecture."
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Name of the doctor."
+        },
+        "internalFilePath": {
+          "type": "string",
+          "description": "Private internal app storage path (filesDir/offline_vault/)."
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "description": "Duration of the video in seconds."
+        },
+        "fileSizeMb": {
+          "type": "integer",
+          "description": "File size in megabytes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "lectureId",
+        "title",
+        "description",
+        "categoryName",
+        "doctorName",
+        "internalFilePath",
+        "durationSeconds",
+        "fileSizeMb",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExamItem": {
+      "title": "ExamItem",
+      "description": "Timed PDF exam uploaded by an admin/doctor for a specific academic course, downloadable unencrypted to student phones during the scheduled window.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the exam."
+        },
+        "description": {
+          "type": "string",
+          "description": "Instructions or notes for the exam."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "ID of the parent academic category (course)."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Name of the parent academic category (course)."
+        },
+        "uploadedByUid": {
+          "type": "string",
+          "description": "UID of the admin/doctor who uploaded the exam."
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Name of the doctor who uploaded the exam."
+        },
+        "pdfFileName": {
+          "type": "string",
+          "description": "Original or display PDF file name."
+        },
+        "fileSizeKb": {
+          "type": "integer",
+          "description": "Size of the PDF file in kilobytes."
+        },
+        "chunkCount": {
+          "type": "integer",
+          "description": "Number of Base64 PDF chunks stored in pdf_chunks subcollection."
+        },
+        "startTimeMillis": {
+          "type": "integer",
+          "description": "Scheduled start timestamp in epoch milliseconds."
+        },
+        "endTimeMillis": {
+          "type": "integer",
+          "description": "Scheduled end timestamp in epoch milliseconds."
+        },
+        "scheduleLabel": {
+          "type": "string",
+          "description": "Formatted Arabic schedule string (Day, Date, From time -> To time)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["published"],
+          "description": "Visibility status for query enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "categoryId",
+        "categoryName",
+        "uploadedByUid",
+        "doctorName",
+        "pdfFileName",
+        "fileSizeKb",
+        "chunkCount",
+        "startTimeMillis",
+        "endTimeMillis",
+        "scheduleLabel",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExamPdfChunk": {
+      "title": "ExamPdfChunk",
+      "description": "Base64-encoded binary PDF chunk for an exam.",
+      "type": "object",
+      "properties": {
+        "examId": {
+          "type": "string",
+          "description": "ID of the parent exam."
+        },
+        "chunkIndex": {
+          "type": "integer",
+          "description": "Zero-based index of the PDF chunk."
+        },
+        "dataBase64": {
+          "type": "string",
+          "description": "Base64-encoded PDF bytes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["examId", "chunkIndex", "dataBase64", "createdAt", "updatedAt"]
+    },
+    "CourseNotification": {
+      "title": "CourseNotification",
+      "description": "Course-scoped notification broadcast when an admin uploads a new lecture or exam.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Notification title."
+        },
+        "body": {
+          "type": "string",
+          "description": "Notification message body."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Course ID for targeted students."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Course name."
+        },
+        "eventType": {
+          "type": "string",
+          "enum": ["new_lecture", "new_exam"],
+          "description": "Type of course event."
+        },
+        "targetItemId": {
+          "type": "string",
+          "description": "ID of the newly uploaded lecture or exam."
+        },
+        "createdByUid": {
+          "type": "string",
+          "description": "UID of the admin who triggered the notification."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["published"],
+          "description": "Visibility status for query enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "title",
+        "body",
+        "categoryId",
+        "categoryName",
+        "eventType",
+        "targetItemId",
+        "createdByUid",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/system_state/{configId}": {
+      "schema": { "$ref": "#/entities/SystemState" },
+      "description": "Global bootstrap state and hashed admin email allowlist."
+    },
+    "/admin_members/{userId}": {
+      "schema": { "$ref": "#/entities/AdminMember" },
+      "description": "Verified admin membership documents keyed by UID."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminEntry" },
+      "description": "Admin directory entries readable and writable exclusively by admins."
+    },
+    "/student_requests/{studentId}": {
+      "schema": { "$ref": "#/entities/StudentRequest" },
+      "description": "Student join requests and approval statuses controlled by admins."
+    },
+    "/course_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/CourseRequest" },
+      "description": "Per-category (course) enrollment requests and approvals for students."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Academic medical categories created by admins."
+    },
+    "/lectures/{lectureId}": {
+      "schema": { "$ref": "#/entities/Lecture" },
+      "description": "Medical video lectures uploaded by admins or recorded from live meetings."
+    },
+    "/lectures/{lectureId}/video_chunks/{chunkId}": {
+      "schema": { "$ref": "#/entities/LectureVideoChunk" },
+      "description": "Binary MP4 video chunks uploaded by the doctor for student streaming and in-app download."
+    },
+    "/meetings/{meetingId}": {
+      "schema": { "$ref": "#/entities/Meeting" },
+      "description": "Native built-in live meetings hosted by admins and joined by approved students."
+    },
+    "/meetings/{meetingId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/MeetingMessage" },
+      "description": "Real-time chat questions and hand-raise events inside a native live meeting."
+    },
+    "/users/{userId}/downloads/{lectureId}": {
+      "schema": { "$ref": "#/entities/OfflineDownload" },
+      "description": "Student-owned offline download metadata for internal app storage."
+    },
+    "/exams/{examId}": {
+      "schema": { "$ref": "#/entities/ExamItem" },
+      "description": "Timed PDF exams organized by course."
+    },
+    "/exams/{examId}/pdf_chunks/{chunkId}": {
+      "schema": { "$ref": "#/entities/ExamPdfChunk" },
+      "description": "Unencrypted PDF chunks for direct download to student phones."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/CourseNotification" },
+      "description": "Course-scoped notifications for new lectures and exams."
+    }
+  }
+}

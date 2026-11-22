@@ -1,0 +1,76 @@
+:root {
+  /* ===== Elghaliz Medicine brand palette (from Color.kt) ===== */
+  --emerald-primary: #0f3d2e;
+  --emerald-primary-dark: #0a2a20;
+  --emerald-light-accent: #1f6b52;
+  --gold-accent: #c9a24d;
+  --cream-bg: #f7f3ea;
+  --card-bg: #fffdf8;
+  --card-border: #efe8d8;
+  --light-mint: #e9f0e8;
+  --deep-ink: #1e2b25;
+  --muted-sage: #5e6a63;
+  --medical-outline: #dcd2be;
+  --coral: #b04a44;
+  --danger-bg: #fbedea;
+
+  /* Dark counterparts */
+  --dark-bg: #0a2a20;
+  --dark-surface: #123528;
+  --dark-text: #f7f3ea;
+  --dark-text-2: #b0c4b8;
+
+  /* Semantic (light theme, default) */
+  --color-primary: var(--emerald-primary);
+  --color-on-primary: #ffffff;
+  --color-primary-container: var(--light-mint);
+  --color-secondary: var(--gold-accent);
+  --color-bg: var(--cream-bg);
+  --color-surface: var(--card-bg);
+  --color-surface-variant: var(--light-mint);
+  --color-text: var(--deep-ink);
+  --color-text-muted: var(--muted-sage);
+  --color-outline: var(--card-border);
+  --color-error: var(--coral);
+  --color-error-container: var(--danger-bg);
+
+  /* Radius scale (from Theme.kt MedicalShapes) */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 26px;
+  --r-xl: 36px;
+  --r-pill: 999px;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(30, 43, 37, 0.06);
+  --shadow-md: 0 6px 18px rgba(15, 61, 46, 0.1);
+  --shadow-lg: 0 18px 48px rgba(15, 61, 46, 0.18);
+
+  /* Fonts */
+  --font-head: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+}
+
+[data-theme='dark'] {
+  --color-primary: var(--gold-accent);
+  --color-on-primary: var(--emerald-primary);
+  --color-primary-container: var(--dark-surface);
+  --color-bg: var(--dark-bg);
+  --color-surface: var(--dark-surface);
+  --color-surface-variant: var(--dark-surface);
+  --color-text: var(--dark-text);
+  --color-text-muted: var(--dark-text-2);
+  --color-outline: var(--emerald-primary);
+  --card-bg: var(--dark-surface);
+  --card-border: #1c3a2d;
+}

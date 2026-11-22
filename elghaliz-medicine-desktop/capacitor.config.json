@@ -1,0 +1,12 @@
+{
+  "appId": "com.elghaliz.medicine",
+  "appName": "Elghaliz Medicine",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": false
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}

@@ -1,0 +1,22 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
+
+// base './' so the built bundle works when loaded from file:// inside Electron
+export default defineConfig({
+  plugins: [react()],
+  base: './',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
+  server: {
+    port: 5175,
+    strictPort: false,
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
+});
